@@ -9,24 +9,20 @@ import (
 )
 
 func main() {
-	privateKey, err := crypto.GenerateKey()
+	prk, err := crypto.GenerateKey()
 	if err != nil {
 		panic(err)
 	}
 
-	privateKeyBytes := crypto.FromECDSA(privateKey)
-	fmt.Printf("private key: %s\n", hexutil.Encode(privateKeyBytes)[2:])
+	prkBytes := crypto.FromECDSA(prk)
+	fmt.Printf("private key: %s\n", hexutil.Encode(prkBytes)[2:])
 
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	pbk := prk.Public()
+	pbkECDSA, ok := pbk.(*ecdsa.PublicKey)
 	if !ok {
 		panic("error casting public key to ECDSA")
 	}
 
-	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-	fmt.Printf("public key: %s\n", hexutil.Encode(publicKeyBytes)[4:])
-
-	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
-	fmt.Printf("public address: %s\n", address)
-
+	a := crypto.PubkeyToAddress(*pbkECDSA).Hex()
+	fmt.Printf("public address: %s\n", a)
 }
