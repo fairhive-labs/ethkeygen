@@ -39,6 +39,7 @@ func TestGenerateN(t *testing.T) {
 		{10, 10},
 		{100, 100},
 		{1000, 1000},
+		{10000, 10000},
 		{0, 1},
 	}
 	for _, tc := range tt {
@@ -48,9 +49,21 @@ func TestGenerateN(t *testing.T) {
 				t.Errorf("error generating %d private key / public address: %v\n", tc.v, err)
 				t.FailNow()
 			}
+
 			if len(m) != tc.exp {
 				t.Errorf("incorrect map length, got %d, want %d\n", len(m), tc.exp)
 				t.FailNow()
+			}
+			for k, a := range m {
+				if !prkRegExp.Match([]byte(k)) {
+					t.Errorf("%q is not a private key !\n", k)
+					t.FailNow()
+				}
+
+				if !addressRegExp.Match([]byte(a)) {
+					t.Errorf("%q is not a public address !\n", a)
+					t.FailNow()
+				}
 			}
 		})
 	}
