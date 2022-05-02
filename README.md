@@ -1,2 +1,2 @@
-# eth-key
+# ethkeygen
 Eth Key Generator
