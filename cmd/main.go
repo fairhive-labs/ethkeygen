@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -9,12 +10,20 @@ import (
 )
 
 func main() {
-	w := tabwriter.NewWriter(os.Stdout, 8, 8, 8, '\t', 0)
-	prk, a, err := key.Generate()
-	if err != nil {
-		panic(err)
+	n := flag.Int("n", 1, "set the number of private key / public address that will be generated")
+	flag.Parse()
+	if *n > 100 { // max 100
+		*n = 100
 	}
-	fmt.Fprintf(w, "🔑 private key:\t\u001b[1;34m%s\u001b[0m\n", prk)
-	fmt.Fprintf(w, "🚩 public address:\t\u001b[42m%s\u001b[0m\n", a)
+	w := tabwriter.NewWriter(os.Stdout, 4, 4, 2, '\t', 0)
+	fmt.Fprintf(w, "\n\u001b[42m** Generating %d private key(s) / public address(es) **\u001b[0m\n", *n)
+	for i := 0; i < *n; i++ {
+		prk, a, err := key.Generate()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Fprintf(w, "\n%d\t🔑 private key:\t\u001b[44m%s\u001b[0m\n", i+1, prk)
+		fmt.Fprintf(w, "\t🚩 public address:\t\u001b[1;34m%s\u001b[0m\n", a)
+	}
 	w.Flush()
 }

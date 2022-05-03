@@ -1,7 +1,7 @@
 run: clean build
-	./bin/ethkeygen
+	./bin/ethkeygen $(COMMAND_ARGS)
 build: clean
-	go build -o bin/ethkeygen -v ./cmd/main.go
+	go build -o bin/ethkeygen -v ./cmd/main.go 
 clean:
 	rm -rf ./bin
 test:
