@@ -38,9 +38,9 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "polar-plains-98105"
+          heroku_app_name: "ethkeygen"
           heroku_email: "jsie@fairhive-labs.com"
-          healthcheck: "https://polar-plains-98105.herokuapp.com/health"
+          healthcheck: "https://ethkeygen.herokuapp.com/health"
           checkstring: "ok"
           delay: 5
           rollbackonhealthcheckfailed: true
@@ -50,6 +50,6 @@ jobs:
           SLACK_CHANNEL: _github
           SLACK_COLOR: ${{ job.status }}
           SLACK_TITLE: Heroku Deployment - ethkeygen
-          SLACK_MESSAGE: "https://polar-plains-98105.herokuapp.com/${{ env.FAIRHIVE_API_SECURE_PATH1 }}/${{ env.FAIRHIVE_API_SECURE_PATH2 }}/count"
+          SLACK_MESSAGE: "https://ethkeygen.herokuapp.com/"
           SLACK_USERNAME: _whyvrafvr
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
