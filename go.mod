@@ -2,6 +2,9 @@ module github.com/fairhive-labs/ethkeygen
 
 go 1.18
 
+// +heroku install ./cmd/...
+// +heroku goVersion 1.18
+
 require github.com/ethereum/go-ethereum v1.10.17
 
 require (
