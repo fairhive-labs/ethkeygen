@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	key "github.com/fairhive-labs/ethkeygen/pkg"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,7 +33,12 @@ func setupRouter() *gin.Engine {
 	})
 	r.GET("/favicon.ico", getFavicon)
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
+		m, err := key.GenerateN(10)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.HTML(http.StatusOK, "index.html", m)
 	})
 	return r
 }
