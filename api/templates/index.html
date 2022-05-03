@@ -7,16 +7,11 @@
     <style>
         html,
         body {
-            height: 100%;
-            font-size: xx-large;
             background-color: black;
         }
 
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
+        .container-sm {
+            margin-top: 16px;
         }
 
         table {
@@ -25,72 +20,61 @@
         }
 
         td {
-            text-align: left;
-            padding: 8px;
-            min-width: 120px;
-        }
-
-        th,
-        td.count {
             text-align: center;
-            padding: 8px;
-        }
-
-        td.count {
             font-family: 'Courier New', Courier, monospace;
         }
 
-        .agent {
-            color: #ffe864 !important;
+        th {
+            text-align: center;
         }
 
-        .client {
-            color: #f36b6b !important;
+        .address {
+            color: white;
+            background-color: dodgerblue;
+            font-weight: bold;
         }
 
-        .mentor {
-            color: #a9c2f0 !important;
-        }
-
-        .talent {
-            color: #ffbe96 !important;
+        .key {
+            color: deepskyblue;
+            background-color: black;
         }
 
         @media all and (max-width: 500px) {
+            .container-sm {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
 
-            html,
-            body {
-                font-size: large;
+            td {
+                font-size: xx-small;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-sm">
         <table class="table table-dark table-striped">
-            <caption>Waitlist - User Count</caption>
+            <caption>Ethereum Key Generator</caption>
             <thead>
                 <tr>
                     <th scope="col">
-                        User Type
-                    </th>
-                    <th scope="col">
-                        Count
+                        <span>🔑 Private Key</span>
+                        <br />
+                        <span>🚩 Public Address</span>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                {{range $type,$count := .users}}<tr>
-                    {{ if or (eq $type "agent") (eq $type "client") (eq $type "mentor") (eq $type "talent")}}
-                    <td class="{{$type}}">{{$type}}</td>{{else}}<td>{{$type}}</td>{{end}}<td class="count">{{$count}}</td>
+                {{range $k,$a := .}}<tr>
+                    <td>
+                        <span>🔑</span><br />
+                        <span class="key">{{$k}}</span><br />
+                        <span>🚩</span><br />
+                        <span class="address">{{$a}}</span>
+                    </td>
                 </tr>
                 {{end}}
-            <tfoot>
-                <tr>
-                    <td colspan="2">Total: {{.total}}</td>
-                </tr>
-            </tfoot>
             </tbody>
         </table>
     </div>
