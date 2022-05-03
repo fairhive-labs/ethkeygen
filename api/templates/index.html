@@ -1,0 +1,99 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    {{template "header"}}
+    <style>
+        html,
+        body {
+            height: 100%;
+            font-size: xx-large;
+            background-color: black;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+        }
+
+        td {
+            text-align: left;
+            padding: 8px;
+            min-width: 120px;
+        }
+
+        th,
+        td.count {
+            text-align: center;
+            padding: 8px;
+        }
+
+        td.count {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .agent {
+            color: #ffe864 !important;
+        }
+
+        .client {
+            color: #f36b6b !important;
+        }
+
+        .mentor {
+            color: #a9c2f0 !important;
+        }
+
+        .talent {
+            color: #ffbe96 !important;
+        }
+
+        @media all and (max-width: 500px) {
+
+            html,
+            body {
+                font-size: large;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <table class="table table-dark table-striped">
+            <caption>Waitlist - User Count</caption>
+            <thead>
+                <tr>
+                    <th scope="col">
+                        User Type
+                    </th>
+                    <th scope="col">
+                        Count
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $type,$count := .users}}<tr>
+                    {{ if or (eq $type "agent") (eq $type "client") (eq $type "mentor") (eq $type "talent")}}
+                    <td class="{{$type}}">{{$type}}</td>{{else}}<td>{{$type}}</td>{{end}}<td class="count">{{$count}}</td>
+                </tr>
+                {{end}}
+            <tfoot>
+                <tr>
+                    <td colspan="2">Total: {{.total}}</td>
+                </tr>
+            </tfoot>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
