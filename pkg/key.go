@@ -3,12 +3,17 @@ package key
 import (
 	"crypto/ecdsa"
 	"errors"
+	"regexp"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
+var (
+	prkRegExp                  = regexp.MustCompile(`^[a-f0-9]{64}$`)
+	addressRegExp              = regexp.MustCompile(`^0x[a-fA-F0-9]{40}$`)
+	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
+)
 
 // Generate returns a private key and its public address as two strings.
 func Generate() (prk string, a string, err error) {
@@ -44,4 +49,12 @@ func GenerateN(N int) (map[string]string, error) {
 		m[k] = a
 	}
 	return m, nil
+}
+
+func ValidPrivateKey(k string) bool {
+	return prkRegExp.Match([]byte(k))
+}
+
+func ValidPublicAddress(a string) bool {
+	return addressRegExp.Match([]byte(a))
 }
