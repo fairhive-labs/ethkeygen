@@ -51,10 +51,12 @@ func GenerateN(N int) (map[string]string, error) {
 	return m, nil
 }
 
+// ValidPrivateKey tests if the key is a well formated private key
 func ValidPrivateKey(k string) bool {
 	return prkRegExp.Match([]byte(k))
 }
 
+// ValidPublicAddress tests if the address is a well formated public address
 func ValidPublicAddress(a string) bool {
 	return addressRegExp.Match([]byte(a))
 }
