@@ -22,6 +22,13 @@ import (
 //go:embed assets templates
 var tfs embed.FS
 
+const (
+	robotsTxt = `
+User-agent: *
+Disallow: /members/*
+`
+)
+
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	t := template.Must(template.ParseFS(tfs, "templates/*"))
@@ -32,6 +39,9 @@ func setupRouter() *gin.Engine {
 		c.String(http.StatusOK, "ok")
 	})
 	r.GET("/favicon.ico", getFavicon)
+	r.GET("/robots.txt", func(c *gin.Context) {
+		c.Data(http.StatusOK, "text/plain", []byte(robotsTxt))
+	})
 	r.GET("/", func(c *gin.Context) {
 		m, err := key.GenerateN(10)
 		if err != nil {
