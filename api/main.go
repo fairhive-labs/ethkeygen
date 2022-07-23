@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -38,11 +39,45 @@ func generate(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", m)
 }
 
-func sign(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "ok",
-	})
-	return
+func bulkSignature(c *gin.Context) {
+	// get message
+	var m struct {
+		Message string
+	}
+	if err := c.ShouldBindJSON(&m); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	nQ := c.DefaultQuery("n", "10")
+	// control iterations
+	n, err := strconv.Atoi(nQ)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	if n <= 0 {
+		n = 10
+	}
+
+	prk, a, err := key.Generate()
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	s, err := key.SignMessage(prk, m.Message)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"total":      n,
+		"privateKey": prk,
+		"address":    a,
+		"signature":  s,
+		"message":    m.Message})
 }
 
 func setupRouter() *gin.Engine {
@@ -58,7 +93,7 @@ func setupRouter() *gin.Engine {
 	r.GET("/robots.txt", func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/plain", []byte(robotsTxt))
 	})
-	r.PUT("/sign", sign)
+	r.PUT("/bulk-signature", bulkSignature)
 	r.GET("/", generate)
 	return r
 }
