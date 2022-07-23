@@ -29,6 +29,22 @@ Disallow: /members/*
 `
 )
 
+func generate(c *gin.Context) {
+	m, err := key.GenerateN(10)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.HTML(http.StatusOK, "index.html", m)
+}
+
+func sign(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ok",
+	})
+	return
+}
+
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	t := template.Must(template.ParseFS(tfs, "templates/*"))
@@ -42,14 +58,8 @@ func setupRouter() *gin.Engine {
 	r.GET("/robots.txt", func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/plain", []byte(robotsTxt))
 	})
-	r.GET("/", func(c *gin.Context) {
-		m, err := key.GenerateN(10)
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-		c.HTML(http.StatusOK, "index.html", m)
-	})
+	r.PUT("/sign", sign)
+	r.GET("/", generate)
 	return r
 }
 
