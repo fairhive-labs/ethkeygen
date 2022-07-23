@@ -100,3 +100,55 @@ func TestGenerateN(t *testing.T) {
 		})
 	}
 }
+
+func TestSignMessage(t *testing.T) {
+	tt := []struct {
+		name string
+		k, m string
+		s    string
+		err  error
+	}{
+		{
+			"valid_1",
+			"fe94806c6880c4271825152ed2ac0defa04d61b478892c4fbefae2c575a49612",
+			"awesome super message to sign",
+			"0xc97c389e5f120b1b4b189159b31f45c353a403c0f50a624bb2f44006a28cdaa03b23eb3d92bad05bd63a745c6f5a394c9562cf54cbbb333e190e414c7d98e9bc01",
+			nil},
+		{
+			"valid_2",
+			"fe94806c6880c4271825152ed2ac0defa04d61b478892c4fbefae2c575a49612",
+			"another super message to sign",
+			"0xf3fb762b0dccfc57a030741bbb998eae22e40b8c5729fa372fd27599594b71193f08598a8982adf95b12bf4a8206a4f9e79d16b24747c750fcb9c7fd675d932c01",
+			nil},
+		{
+			"empty message",
+			"fe94806c6880c4271825152ed2ac0defa04d61b478892c4fbefae2c575a49612",
+			"",
+			"0x324ccd8627137f5f8782280fc635e7d01fa02f6353aab68a9eeb9f7be999a8236ec48de7650ec6bd44f9605cac560c0cf79a8e06c8c4e460c9a816a680a728f300",
+			nil},
+		{
+			"empty key",
+			"",
+			"another super message to sign",
+			"0xf3fb762b0dccfc57a030741bbb998eae22e40b8c5729fa372fd27599594b71193f08598a8982adf95b12bf4a8206a4f9e79d16b24747c750fcb9c7fd675d932c01",
+			ErrConvertingPrivateKeyToECDSA},
+		{
+			"invalid key",
+			"123456",
+			"another super message to sign",
+			"0xf3fb762b0dccfc57a030741bbb998eae22e40b8c5729fa372fd27599594b71193f08598a8982adf95b12bf4a8206a4f9e79d16b24747c750fcb9c7fd675d932c01",
+			ErrConvertingPrivateKeyToECDSA},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := SignMessage(tc.k, tc.m)
+			if err != tc.err {
+				t.Errorf("incorrect error, got %v, want %v", err, tc.err)
+				t.FailNow()
+			}
+			if err == nil && s != tc.s {
+				t.Errorf("incorrect signature, got %v, want %v", s, tc.s)
+			}
+		})
+	}
+}

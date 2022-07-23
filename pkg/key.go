@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	prkRegExp                  = regexp.MustCompile(`^[a-f0-9]{64}$`)
-	addressRegExp              = regexp.MustCompile(`^0x[a-fA-F0-9]{40}$`)
-	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
+	prkRegExp                      = regexp.MustCompile(`^[a-f0-9]{64}$`)
+	addressRegExp                  = regexp.MustCompile(`^0x[a-fA-F0-9]{40}$`)
+	ErrCastingPublicKeyToECDSA     = errors.New("error casting public key to ECDSA")
+	ErrConvertingPrivateKeyToECDSA = errors.New("error converting private key to ECDSA")
 )
 
 // Generate returns a private key and its public address as two strings.
@@ -62,11 +63,11 @@ func ValidPublicAddress(a string) bool {
 	return addressRegExp.Match([]byte(a))
 }
 
-//Sign message using EIP 191 with the personal_sign format
+// Sign message using EIP 191 with the personal_sign format
 func SignMessage(k, m string) (s string, err error) {
 	prk, err := crypto.HexToECDSA(k)
 	if err != nil {
-		return
+		return "", ErrConvertingPrivateKeyToECDSA
 	}
 
 	data := []byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(m), m))
