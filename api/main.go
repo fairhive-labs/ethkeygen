@@ -20,6 +20,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type signature struct {
+	PrivateKey string `json:"privateKey"`
+	Address    string `json:"address"`
+	Signature  string `json:"signature"`
+}
+
 //go:embed assets templates
 var tfs embed.FS
 
@@ -49,34 +55,36 @@ func bulkSignature(c *gin.Context) {
 		return
 	}
 
-	nQ := c.DefaultQuery("n", "10")
+	nQ := c.DefaultQuery("n", "1")
 	// control iterations
 	n, err := strconv.Atoi(nQ)
 	if err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	if n <= 0 {
-		n = 10
+	if n <= 0 || n > 10000 {
+		n = 1
 	}
 
-	prk, a, err := key.Generate()
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
+	signatures := make([]signature, n)
+	for i := 0; i < n; i++ {
+		prk, a, err := key.Generate()
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 
-	s, err := key.SignMessage(prk, m.Message)
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
+		s, err := key.SignMessage(prk, m.Message)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		signatures[i] = signature{prk, a, s}
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"total":      n,
-		"privateKey": prk,
-		"address":    a,
-		"signature":  s,
+		"signatures": signatures,
 		"message":    m.Message})
 }
 
