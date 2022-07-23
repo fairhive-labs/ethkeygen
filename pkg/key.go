@@ -3,6 +3,7 @@ package key
 import (
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"regexp"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -59,4 +60,22 @@ func ValidPrivateKey(k string) bool {
 // ValidPublicAddress tests if the address is a well formated public address
 func ValidPublicAddress(a string) bool {
 	return addressRegExp.Match([]byte(a))
+}
+
+//Sign message using EIP 191 with the personal_sign format
+func SignMessage(k, m string) (s string, err error) {
+	prk, err := crypto.HexToECDSA(k)
+	if err != nil {
+		return
+	}
+
+	data := []byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(m), m))
+	hash := crypto.Keccak256Hash(data)
+
+	signature, err := crypto.Sign(hash.Bytes(), prk)
+	if err != nil {
+		return
+	}
+	s = hexutil.Encode(signature)
+	return s, nil
 }
