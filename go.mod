@@ -3,7 +3,7 @@ module github.com/fairhive-labs/ethkeygen
 go 1.20
 
 // +heroku install ./api/...
-// +heroku goVersion 1.20
+// +heroku goVersion 1.21
 
 require (
 	github.com/ethereum/go-ethereum v1.13.1
