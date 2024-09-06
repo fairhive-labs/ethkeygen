@@ -97,7 +97,11 @@ func bulkSignature(c *gin.Context) {
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
-	t := template.Must(template.ParseFS(tfs, "templates/*"))
+	t := template.Must(template.New("").Funcs(template.FuncMap{
+		"inc": func(i int) int {
+			return i + 1
+		},
+	}).ParseFS(tfs, "templates/*"))
 	r.SetHTMLTemplate(t)
 
 	r.Use(cors)

@@ -33,11 +33,13 @@
             color: white;
             background-color: dodgerblue;
             font-weight: bold;
+            padding: 1px;
         }
 
         .key {
             color: deepskyblue;
             background-color: black;
+            padding: 1px;
         }
 
         @media all and (max-width: 500px) {
@@ -71,21 +73,22 @@
             <thead>
                 <tr>
                     <th scope="col">
-                        <span>🔑 Private Key</span>
+                        <span class="key">🔑 Private Key</span>
                         <br />
-                        <span>🚩 Public Address</span>
+                        <span class="address">📥 Public Address</span>
                     </th>
                 </tr>
             </thead>
             <tbody>
+                {{ $index := 1 }}
                 {{range $k,$a := .}}<tr>
                     <td>
-                        <span>🔑</span><br />
-                        <span class="key">{{$k}}</span><br />
-                        <span>🚩</span><br />
-                        <span class="address">{{$a}}</span>
+                        <span>(#{{$index}})</span><br />
+                        <span class="key">🔑 {{$k}}</span><br />
+                        <span class="address">📥 {{$a}}</span>
                     </td>
                 </tr>
+                {{ $index = inc $index }}
                 {{end}}
             </tbody>
         </table>
