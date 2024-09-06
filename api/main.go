@@ -37,7 +37,14 @@ Disallow: /members/*
 )
 
 func generate(c *gin.Context) {
-	m, err := key.GenerateN(10)
+	l := c.DefaultQuery("l", strconv.Itoa(10))
+	ln, err := strconv.Atoi(l)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	m, err := key.GenerateN(ln)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
