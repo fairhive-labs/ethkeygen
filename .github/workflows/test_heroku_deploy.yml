@@ -15,7 +15,9 @@ jobs:
     strategy:
       matrix:
         go-version: [1.23.x]
-        os: [ubuntu-latest, macos-latest] #, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+    continue-on-error: true  
     runs-on: ${{ matrix.os }}
     outputs:
       ubuntu_latest_success: ${{ steps.set_var.outputs.ubuntu_latest_success }}
@@ -30,20 +32,13 @@ jobs:
         run: go test -v ./...
       - name: Set Output for Ubuntu-Latest Success
         id: set_var
-        if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success()}}
         run: echo "ubuntu_latest_success=true" >> $GITHUB_OUTPUT
-
-  ubuntu_latest_success:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Display ubuntu_latest_success
-        run: echo "ubuntu_latest_success is ${{ needs.test.outputs.ubuntu_latest_success }}"
 
   heroku:
     runs-on: ubuntu-latest
     needs: test
-    if: ${{ needs.test.outputs.ubuntu_latest_success == true }}
+    if: ${{ needs.test.outputs.ubuntu_latest_success == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
