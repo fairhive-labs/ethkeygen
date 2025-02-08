@@ -5,6 +5,11 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 name: Test & Heroku Deployment & Docker
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -13,19 +18,25 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: setup
-        uses: actions/setup-go@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-      - run: go test -v ./...
+      - name: Run Tests
+        run: go test -v ./...
   heroku:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v3
-      - uses: akhileshns/heroku-deploy@v3.12.13
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Heroku CLI (if missing)
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.13.15
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "ethkeygen"
@@ -50,17 +61,17 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Log in to the Container registry
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4.3.0
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -70,7 +81,7 @@ jobs:
             type=semver,pattern={{raw}}
             type=sha,format=long
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
