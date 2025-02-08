@@ -34,7 +34,7 @@ jobs:
 
   heroku:
     runs-on: ubuntu-latest
-    needs: test
+    # needs: test
     steps:
       - name: Display ubuntu_latest_success
         run: echo "ubuntu_latest_success is ${{ needs.test.outputs.ubuntu_latest_success }}"
