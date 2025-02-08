@@ -34,6 +34,7 @@ jobs:
 
   ubuntu_latest_success:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Display ubuntu_latest_success
         run: echo "ubuntu_latest_success is ${{ needs.test.outputs.ubuntu_latest_success }}"
