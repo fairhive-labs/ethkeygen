@@ -17,13 +17,22 @@ jobs:
         go-version: [1.23.x]
         os: [ubuntu-latest, macos-latest, windows-latest]
       fail-fast: false
-    continue-on-error: true  
+    continue-on-error: true
     runs-on: ${{ matrix.os }}
     outputs:
-      ubuntu_latest_success: ${{ steps.set_var.outputs.ubuntu_latest_success }}
+      ubuntu_latest_success: ${{ steps.set_output.outputs.ubuntu_latest_success }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Simulate success/failure
+        id: simulate
+        run: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            echo "Simulating failure on Windows."
+            exit 1
+          else
+            echo "Simulating success on ${{ matrix.os }}."
+          fi
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -31,7 +40,7 @@ jobs:
       - name: Run Tests
         run: go test -v ./...
       - name: Set Output for Ubuntu-Latest Success
-        id: set_var
+        id: set_output
         if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success()}}
         run: echo "ubuntu_latest_success=true" >> $GITHUB_OUTPUT
 
