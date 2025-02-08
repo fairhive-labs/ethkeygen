@@ -32,12 +32,16 @@ jobs:
         if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success() }}
         run: echo "ubuntu_latest_success=true" >> $GITHUB_OUTPUT
 
-  heroku:
+  ubuntu_latest_success:
     runs-on: ubuntu-latest
-    # needs: test
     steps:
       - name: Display ubuntu_latest_success
         run: echo "ubuntu_latest_success is ${{ needs.test.outputs.ubuntu_latest_success }}"
+
+  heroku:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Heroku CLI (if missing)
