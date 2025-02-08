@@ -28,7 +28,7 @@ jobs:
         run: go test -v ./...
       - name: Set Output for Ubuntu-Latest Success
         if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success() }}
-        run: echo "::set-output name=ubuntu_latest_success::true"
+        run: echo "ubuntu_latest_success=true" >> $GITHUB_ENV
 
   heroku:
     runs-on: ubuntu-latest
