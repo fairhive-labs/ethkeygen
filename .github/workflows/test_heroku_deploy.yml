@@ -26,9 +26,14 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Run Tests
         run: go test -v ./...
+      - name: Set Output for Ubuntu-Latest Success
+        if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success() }}
+        run: echo "::set-output name=ubuntu_latest_success::true"
+
   heroku:
     runs-on: ubuntu-latest
     needs: test
+    if: ${{ needs.test.outputs.ubuntu_latest_success == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,6 +61,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
   docker:
     needs: test
+    if: ${{ needs.test.outputs.ubuntu_latest_success == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
