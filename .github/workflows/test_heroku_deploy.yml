@@ -27,7 +27,7 @@ jobs:
       - name: Simulate success/failure
         id: simulate
         run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          if [ "${{ matrix.os }}" == "windows-latest" ] || [ "${{ matrix.os }}" == "macos-latest" ]; then
             echo "Simulating failure on Windows."
             exit 1
           else
