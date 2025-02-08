@@ -17,6 +17,8 @@ jobs:
         go-version: [1.23.x]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    outputs:
+      ubuntu_latest_success: ${{ steps.set_var.outputs.ubuntu_latest_success }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,13 +30,14 @@ jobs:
         run: go test -v ./...
       - name: Set Output for Ubuntu-Latest Success
         if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success() }}
-        run: echo "ubuntu_latest_success=true" >> $GITHUB_ENV
+        run: echo "ubuntu_latest_success=true" >> $GITHUB_OUTPUT
 
   heroku:
     runs-on: ubuntu-latest
     needs: test
-    if: ${{ steps.set_output.outputs.ubuntu_latest_success == 'true' }}
     steps:
+      - name: Display ubuntu_latest_success
+        run: echo "ubuntu_latest_success is ${{ needs.test.outputs.ubuntu_latest_success }}"
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Heroku CLI (if missing)
