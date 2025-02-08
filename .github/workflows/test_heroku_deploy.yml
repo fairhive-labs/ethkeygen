@@ -28,10 +28,10 @@ jobs:
         id: simulate
         run: |
           if [ "${{ matrix.os }}" == "windows-latest" ] || [ "${{ matrix.os }}" == "macos-latest" ]; then
-            echo "Simulating failure on Windows."
-            exit 1
+            echo "Simulating success on Windows & MacOS."
           else
-            echo "Simulating success on ${{ matrix.os }}."
+            echo "Simulating failure on ${{ matrix.os }}."
+            exit 1
           fi
       - name: Setup Go
         uses: actions/setup-go@v5
