@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"embed"
 	"errors"
 	"fmt"
@@ -29,11 +29,30 @@ type signature struct {
 //go:embed assets templates
 var tfs embed.FS
 
+// The favicon is embedded and immutable, so read it and compute its ETag
+// once at startup instead of on every request.
+var (
+	faviconData []byte
+	faviconETag string
+)
+
+func init() {
+	var err error
+	faviconData, err = tfs.ReadFile("assets/favicon.ico")
+	if err != nil {
+		log.Fatalf("failed to read embedded favicon: %v", err)
+	}
+	faviconETag = fmt.Sprintf("%x", sha256.Sum256(faviconData))
+}
+
 const (
 	robotsTxt = `
 User-agent: *
 Disallow: /members/*
 `
+	// maxKeys bounds the number of keys the / endpoint will generate per
+	// request, preventing resource exhaustion from an arbitrarily large ?l=.
+	maxKeys = 1000
 )
 
 func generate(c *gin.Context) {
@@ -42,6 +61,13 @@ func generate(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// bound the request to avoid CPU/memory exhaustion from huge ?l= values
+	if ln < 1 {
+		ln = 1
+	} else if ln > maxKeys {
+		ln = maxKeys
 	}
 
 	m, err := key.GenerateN(ln)
@@ -165,10 +191,12 @@ func main() {
 }
 
 func cors(c *gin.Context) {
+	// The service is public and uses no cookies/credentials, so a wildcard
+	// origin is fine. Credentials must NOT be combined with "*" (browsers
+	// reject it), and the advertised methods must match the real routes.
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "origin, content-type, accept, authorization")
-	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
 
 	if c.Request.Method == "OPTIONS" {
 		c.AbortWithStatus(http.StatusNoContent)
@@ -178,23 +206,17 @@ func cors(c *gin.Context) {
 }
 
 func getFavicon(c *gin.Context) {
-	file, err := tfs.ReadFile("assets/favicon.ico")
-	etag := fmt.Sprintf("%x", md5.Sum(file))
-	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
 	if match := c.GetHeader("If-None-Match"); match != "" {
-		if strings.Contains(match, etag) {
+		if strings.Contains(match, faviconETag) {
 			c.AbortWithStatus(http.StatusNotModified)
 			return
 		}
 	}
 	c.Header("Cache-Control", "public, max-age=31536000")
-	c.Header("ETag", etag)
+	c.Header("ETag", faviconETag)
 	c.Data(
 		http.StatusOK,
 		"image/x-icon",
-		file,
+		faviconData,
 	)
 }
