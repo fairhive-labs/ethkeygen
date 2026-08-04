@@ -6,6 +6,9 @@ env:
 
 name: Test & Heroku Deployment & Docker
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -28,8 +31,14 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Check formatting
+        if: matrix.os == 'ubuntu-latest'
+        run: test -z "$(gofmt -l .)" || { echo "gofmt needed on:"; gofmt -l .; exit 1; }
+      - name: Vet
+        if: matrix.os == 'ubuntu-latest'
+        run: go vet ./...
       - name: Run Tests
-        run: go test -v ./...
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
       - name: Set Output for Ubuntu-Latest Success
         id: set_output
         if: ${{ matrix.go-version == '1.24.x' && matrix.os == 'ubuntu-latest' && success()}}

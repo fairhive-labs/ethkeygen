@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"embed"
@@ -64,11 +65,7 @@ func generate(c *gin.Context) {
 	}
 
 	// bound the request to avoid CPU/memory exhaustion from huge ?l= values
-	if ln < 1 {
-		ln = 1
-	} else if ln > maxKeys {
-		ln = maxKeys
-	}
+	ln = max(1, min(ln, maxKeys))
 
 	m, err := key.GenerateN(ln)
 	if err != nil {
@@ -100,7 +97,7 @@ func bulkSignature(c *gin.Context) {
 	}
 
 	signatures := make([]signature, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		prk, a, err := key.Generate()
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -146,12 +143,7 @@ func setupRouter() *gin.Engine {
 func main() {
 	r := setupRouter()
 
-	var addr string
-	if p := os.Getenv("PORT"); p != "" {
-		addr = ":" + p
-	} else {
-		addr = ":8080" // default port
-	}
+	addr := ":" + cmp.Or(os.Getenv("PORT"), "8080")
 
 	srv := &http.Server{
 		Addr:           addr,
@@ -162,32 +154,27 @@ func main() {
 		MaxHeaderBytes: 1 << 20, // 1 MB
 	}
 
-	idleConnsClosed := make(chan struct{})
-	go func() {
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-		s := <-quit
-		log.Printf("🚨 Shutdown signal \"%v\" received\n", s)
+	// Listen for OS termination signals and cancel the context on the first one.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	defer stop()
 
-		log.Printf("🚦 Here we go for a graceful Shutdown...\n")
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(ctx); err != nil {
-			// Error from closing listeners, or context timeout:
-			log.Printf("⚠️ HTTP server Shutdown: %v", err)
+	go func() {
+		log.Printf("✅ Listening and serving HTTP on %s\n", addr)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("👹 HTTP server ListenAndServe: %v", err)
 		}
-		close(idleConnsClosed)
 	}()
 
-	log.Printf("✅ Listening and serving HTTP on %s\n", addr)
-	err := srv.ListenAndServe()
-	if !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("👹 HTTP server ListenAndServe: %v", err)
+	<-ctx.Done()
+	stop() // stop intercepting signals so a second one force-quits
+	log.Printf("🚦 Here we go for a graceful Shutdown...\n")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("⚠️ HTTP server Shutdown: %v", err)
 	}
-
-	<-idleConnsClosed
 	log.Printf("😴 Server stopped")
-
 }
 
 func cors(c *gin.Context) {
