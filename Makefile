@@ -1,3 +1,5 @@
+.PHONY: run run-cli build build-cli clean test cover vet fmt tidy
+
 run: clean build
 	./bin/api
 run-cli: clean build-cli
@@ -10,4 +12,13 @@ clean:
 	rm -rf ./bin
 test:
 	go clean -testcache
-	go test -v ./... 
+	go test -race -v ./...
+cover:
+	go test -race -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -func=coverage.out
+vet:
+	go vet ./...
+fmt:
+	gofmt -l -w .
+tidy:
+	go mod tidy

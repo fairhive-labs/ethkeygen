@@ -6,6 +6,9 @@ env:
 
 name: Test & Heroku Deployment & Docker
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -14,7 +17,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.23.x]
+        go-version: [1.24.x]
         os: [ubuntu-latest, macos-latest, windows-latest]
       fail-fast: false
     continue-on-error: true
@@ -28,11 +31,27 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Check formatting
+        if: matrix.os == 'ubuntu-latest'
+        run: test -z "$(gofmt -l .)" || { echo "gofmt needed on:"; gofmt -l .; exit 1; }
+      - name: Vet
+        if: matrix.os == 'ubuntu-latest'
+        run: go vet ./...
       - name: Run Tests
-        run: go test -v ./...
+        # Use bash on every runner so the arguments parse identically
+        # (the Windows default shell, PowerShell, mangles the flags). The
+        # race detector needs a C toolchain, which is reliable on Linux and
+        # macOS but not on the Windows runner, so skip -race there.
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            go test ./...
+          else
+            go test -race -coverprofile=coverage.out -covermode=atomic ./...
+          fi
       - name: Set Output for Ubuntu-Latest Success
         id: set_output
-        if: ${{ matrix.go-version == '1.23.x' && matrix.os == 'ubuntu-latest' && success()}}
+        if: ${{ matrix.go-version == '1.24.x' && matrix.os == 'ubuntu-latest' && success()}}
         run: echo "ubuntu_latest_success=true" >> $GITHUB_OUTPUT
 
   heroku:

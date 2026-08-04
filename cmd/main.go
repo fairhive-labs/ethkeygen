@@ -12,12 +12,10 @@ import (
 func main() {
 	n := flag.Int("n", 1, "set the number of private key / public address that will be generated")
 	flag.Parse()
-	if *n > 100 { // max 100
-		*n = 100
-	}
+	*n = min(*n, 100) // max 100
 	w := tabwriter.NewWriter(os.Stdout, 4, 4, 2, '\t', 0)
 	fmt.Fprintf(w, "\n\u001b[42m** Generating %d private key(s) / public address(es) **\u001b[0m\n", *n)
-	for i := 0; i < *n; i++ {
+	for i := range *n {
 		prk, a, err := key.Generate()
 		if err != nil {
 			panic(err)

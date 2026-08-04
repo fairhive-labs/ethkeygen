@@ -2,6 +2,7 @@ package key
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
@@ -23,7 +24,7 @@ func Generate() (prk string, a string, err error) {
 	if err != nil {
 		return
 	}
-	prk = hexutil.Encode(crypto.FromECDSA(prkECDSA))[2:]
+	prk = hex.EncodeToString(crypto.FromECDSA(prkECDSA))
 
 	pbkECDSA, ok := prkECDSA.Public().(*ecdsa.PublicKey)
 	if !ok {
@@ -35,15 +36,10 @@ func Generate() (prk string, a string, err error) {
 
 // GenerateN returns a map of private keys and public addresses. If N <= 0, generates a single entry.
 func GenerateN(N int) (map[string]string, error) {
-	n := 0
-	if N <= 0 {
-		n = 1
-	} else {
-		n = N
-	}
+	n := max(N, 1)
 
-	m := map[string]string{}
-	for i := 0; i < n; i++ {
+	m := make(map[string]string, n)
+	for range n {
 		k, a, err := Generate()
 		if err != nil {
 			return nil, err
@@ -55,12 +51,12 @@ func GenerateN(N int) (map[string]string, error) {
 
 // ValidPrivateKey tests if the key is a well formated private key
 func ValidPrivateKey(k string) bool {
-	return prkRegExp.Match([]byte(k))
+	return prkRegExp.MatchString(k)
 }
 
 // ValidPublicAddress tests if the address is a well formated public address
 func ValidPublicAddress(a string) bool {
-	return addressRegExp.Match([]byte(a))
+	return addressRegExp.MatchString(a)
 }
 
 // Sign message using EIP 191 with the personal_sign format

@@ -1,13 +1,24 @@
-# use goland:lastest instead of golang:alpine because go git is not available in alpine version
-FROM golang:1.23 AS builder
-WORKDIR /go/src/ethkeygen
-COPY . .
-RUN go mod tidy
-RUN CGO_ENABLED=0 go build -o bin/api -v api/main.go
+# ---- build stage ----
+# golang:alpine bundles git and, with CGO disabled, needs no C toolchain.
+FROM golang:1.24-alpine AS builder
+WORKDIR /src
 
-# do not use "scratch" because heroku requires "/bin/sh" as default entrypoint for config vars
-# btw, if you don't need config vars you can replace CMD by ENTRYPOINT, it works ;)
-FROM alpine
-COPY --from=builder /go/src/ethkeygen/bin/api /app/bin/
+# Download dependencies in a separate, cacheable layer.
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Build a static, stripped binary (no libc dependency -> runs on bare alpine).
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/api ./api
+
+# ---- runtime stage ----
+FROM alpine:3.21
+RUN apk add --no-cache ca-certificates wget \
+    && adduser -D -u 10001 appuser
+COPY --from=builder /out/api /app/bin/api
+USER appuser
+ENV GIN_MODE=release
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
+    CMD wget -qO- http://localhost:8080/health || exit 1
 CMD ["/app/bin/api"]
